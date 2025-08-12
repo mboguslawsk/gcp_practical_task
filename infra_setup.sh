@@ -349,6 +349,96 @@ function create_vm() {
 }
 
 
+function delete_resources() {
+
+    echo
+    echo "================================="
+    echo
+    echo "======= Deleting process ======="
+    echo
+
+    resources_list=( "Compute Engine Instance" "Firewall Rules" "Subnet" "VPC" "Docker Artifact Registry" )
+
+    i=0
+    while [[ $i -lt ${#resources_list[@]} ]]; do
+
+        echo
+        echo -n "Do you want to delete ${resources_list[$i]}? (y or n): "
+        read option
+
+        while [[ "$option" != "y" && "$option" != "n" ]]; do
+            echo -n "Do you want to delete ${resources_list[$i]}? (y or n): "
+            read option
+            if ! [[ "$option" != "y" && "$option" != "n" ]]; then
+                echo "Please enter "y" for deleting or "n" for opposite."
+            fi
+        done
+
+        if [[ $option == "y" ]]; then
+
+            if [[ ${resources_list[$i]} ]]
+
+            case "${resources_list[$i]}" in
+                "Compute Engine Instance")
+                    gcloud compute instances delete $vm_name --zone=$zone_name --project=$gcp_project
+                    if [[ $? -gt 0 ]]; then
+                        echo "Resource \"${resources_list[$i]}\" hasn't been deleted!"
+                    else
+                        echo "Resource \"${resources_list[$i]}\" has been deleted"
+                    fi
+                    ;;
+
+                "Firewall Rules")
+                    all_rules=($(gcloud compute firewall-rules list --filter="network:mbnet9" --project=gd-gcp-internship-devops --format="value(name)"))
+                    echo "All rules to delete: ${all_rules[@]}"
+
+                    for item in ${all_rules[@]}; do
+                        gcloud compute firewall-rules delete ${item} --project=${gcp_project}
+                        if [[ $? -gt 0 ]]; then
+                            echo "Rule \"${item}\" hasn't been deleted!"
+                        else
+                            echo "Rule \"${item}\" has been deleted."
+                        fi
+                    done
+                    ;;
+
+                "Subnet")
+                    gcloud compute networks subnets delete $sub_name --region=$region --project=$gcp_project
+                    if [[ $? -gt 0 ]]; then
+                        echo "Resource \"${resources_list[$i]}\" hasn't been deleted!"
+                    else
+                        echo "Resource \"${resources_list[$i]}\" has been deleted"
+                    fi
+                    ;;
+                
+                "Docker Artifact Registry")
+                    gcloud artifacts repositories delete $repo_name --location=$region --project=$gcp_project
+                    if [[ $? -gt 0 ]]; then
+                        echo "Resource \"${resources_list[$i]}\" hasn't been deleted!"
+                    else
+                        echo "Resource \"${resources_list[$i]}\" has been deleted"
+                    fi
+
+                    ;;
+
+                "VPC")
+                    gcloud compute networks delete $net_name --project=$gcp_project
+                    if [[ $? -gt 0 ]]; then
+                        echo "Resource \"${resources_list[$i]}\" hasn't been deleted!"
+                    else
+                        echo "Resource \"${resources_list[$i]}\" has been deleted"
+                    fi
+                    ;;
+
+            esac
+
+        fi
+
+        ((i++))
+
+    done
+
+
 
 # Start the whole process
 
@@ -359,3 +449,4 @@ create_dock_artif_registry
 prepare_local_image
 push_img_to_artif_registry
 create_vm
+delete_resources

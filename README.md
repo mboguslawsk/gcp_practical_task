@@ -26,6 +26,7 @@ This script will guide you through the following steps:
 * Push image to Artifact Registry
 * Create VM instance
 * Access the deployed app
+* Delete deployed resources
 
 
 Since Google Container Registry (GCR) is now deprecated:
